@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Complaint Classifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 2px 10px rgba(0,0,0,0.2);
+            width: 350px;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+        }
+        p {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .match {
+            background: #0070f3;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 5px;
+            margin: 3px;
+            display: inline-block;
+        }
+        .suggestion {
+            color: #555;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Smart Complaint Classifier</h2>
+        <input type="text" id="keyword" placeholder="Type complaint..." oninput="classify()">
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function classify() {
+            let keyword = document.getElementById("keyword").value;
+            if (!keyword.trim()) {
+                document.getElementById("result").innerHTML = "";
+                return;
+            }
+            let res = await fetch(`/api/complaint_api/classify?keyword=${encodeURIComponent(keyword)}`);
+            let data = await res.json();
+
+            let html = "";
+            if (data.complaint_types) {
+                html += "<p>Complaint Type(s):</p>";
+                data.complaint_types.forEach(type => {
+                    html += `<span class="match">${type}</span>`;
+                });
+            }
+            if (data.suggestions && data.suggestions.length > 0) {
+                html += `<p class="suggestion">Did you mean: ${data.suggestions.join(", ")}?</p>`;
+            }
+            document.getElementById("result").innerHTML = html;
+        }
+    </script>
+</body>
+</html>
