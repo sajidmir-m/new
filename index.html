@@ -1,78 +1,474 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Smart Complaint Classifier</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f9f9f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .box {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 2px 10px rgba(0,0,0,0.2);
-            width: 350px;
-            text-align: center;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            margin-top: 10px;
-        }
-        p {
-            margin-top: 15px;
-            font-weight: bold;
-        }
-        .match {
-            background: #0070f3;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 5px;
-            margin: 3px;
-            display: inline-block;
-        }
-        .suggestion {
-            color: #555;
-            font-size: 14px;
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Smart Complaint Classifier — Dark UI</title>
+
+<style>
+  :root{
+    --bg:#0b0f14;
+    --card:#0f1720;
+    --muted:#9aa4b2;
+    --accent:#7c5cff;
+    --accent-2:#00d4ff;
+    --glass: rgba(255,255,255,0.03);
+    --success:#4ade80;
+    --danger:#ff6b6b;
+  }
+
+  /* Page */
+  html,body{height:100%;margin:0;background:
+    radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,0.08), transparent 10%),
+    radial-gradient(800px 400px at 90% 90%, rgba(0,212,255,0.03), transparent 12%),
+    var(--bg);
+    color:#e6eef6;
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  /* Centering box */
+  .wrap {
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px;
+    box-sizing:border-box;
+  }
+
+  /* Card */
+  .card{
+    width:100%;
+    max-width:880px;
+    border-radius:16px;
+    padding:28px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    box-shadow: 0 10px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    display:grid;
+    grid-template-columns: 1fr 420px;
+    gap:22px;
+    align-items:start;
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* animated shapes */
+  .card::before, .card::after{
+    content:"";
+    position:absolute;
+    border-radius:50%;
+    filter: blur(60px);
+    transform: translateZ(0);
+    opacity:0.55;
+    pointer-events:none;
+  }
+  .card::before{ width:380px;height:380px; right:-120px; top:-80px; background: linear-gradient(135deg,var(--accent), rgba(124,92,255,0.12)); animation: float1 8s ease-in-out infinite; }
+  .card::after{ width:300px;height:300px; left:-140px; bottom:-120px; background: linear-gradient(135deg,var(--accent-2), rgba(0,212,255,0.08)); animation: float2 9s ease-in-out infinite; }
+  @keyframes float1{ 0%{ transform: translateY(0) } 50%{ transform: translateY(14px) } 100%{ transform: translateY(0) } }
+  @keyframes float2{ 0%{ transform: translateY(0) } 50%{ transform: translateY(-12px) } 100%{ transform: translateY(0) } }
+
+  /* Left column (input + tips) */
+  .left {
+    padding:6px 0;
+  }
+  h1 {
+    margin:0 0 8px 0;
+    font-size:20px;
+    letter-spacing:-0.2px;
+  }
+  p.lead { margin:0; color:var(--muted); font-size:13px; margin-bottom:18px; }
+
+  /* Input group */
+  .input-row{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-bottom:12px;
+  }
+  .input {
+    flex:1;
+    position:relative;
+  }
+  input[type="text"]{
+    width:100%;
+    padding:14px 48px 14px 16px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.04);
+    background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+    color:inherit;
+    font-size:15px;
+    outline:none;
+    transition:box-shadow .18s, transform .08s, border-color .12s;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+    backdrop-filter: blur(6px);
+  }
+  input[type="text"]:focus{
+    box-shadow: 0 10px 30px rgba(2,6,23,0.6), 0 0 26px rgba(124,92,255,0.08);
+    border-color: rgba(124,92,255,0.35);
+    transform: translateY(-2px);
+  }
+
+  /* small icon inside input */
+  .input svg {
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%);
+    opacity:0.85;
+  }
+
+  /* buttons */
+  .btn {
+    background: linear-gradient(180deg,var(--accent), #5d46e0);
+    border:none;
+    color:white;
+    padding:10px 14px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+    transition: transform .12s, box-shadow .12s, filter .12s;
+    box-shadow: 0 6px 18px rgba(124,92,255,0.12);
+  }
+  .btn:hover{ transform: translateY(-3px); filter:brightness(1.03); }
+  .btn.secondary{
+    background: transparent;
+    border:1px solid rgba(255,255,255,0.04);
+    color:var(--muted);
+    font-weight:600;
+    box-shadow:none;
+  }
+  .small {
+    padding:8px 10px;
+    font-size:13px;
+    border-radius:8px;
+  }
+
+  /* right column (results) */
+  .right {
+    padding:8px;
+    border-left:1px solid rgba(255,255,255,0.02);
+  }
+  .panel-title { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .panel-title .dot { width:10px; height:10px; border-radius:50%; background: linear-gradient(90deg,var(--accent),var(--accent-2)); box-shadow: 0 6px 18px rgba(124,92,255,0.12); }
+  .results {
+    min-height:150px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .chips {
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .chip {
+    padding:8px 12px;
+    border-radius:999px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    border:1px solid rgba(255,255,255,0.03);
+    font-weight:600;
+    font-size:13px;
+    color:var(--accent-2);
+    display:inline-flex;
+    gap:8px;
+    align-items:center;
+    transform: translateY(0);
+    animation: appear .28s ease-out both;
+  }
+  .chip.kv { color: #bfe9ff; background: linear-gradient(180deg, rgba(0,212,255,0.06), rgba(0,212,255,0.03)); }
+  .chip.warn { color: var(--danger); }
+  .chip.good { color: var(--success); }
+
+  @keyframes appear { from { opacity:0; transform: translateY(6px) scale(.98) } to { opacity:1; transform: translateY(0) scale(1) } }
+
+  /* suggestion text */
+  .suggest { color:var(--muted); font-size:13px; margin-top:6px; }
+
+  /* footer small */
+  .meta { color:var(--muted); font-size:12px; margin-top:14px; }
+
+  /* responsive */
+  @media (max-width:880px){
+    .card{ grid-template-columns:1fr; padding:20px; }
+    .right{ border-left:none; border-top:1px solid rgba(255,255,255,0.02); margin-top:8px; padding-top:14px; }
+  }
+</style>
 </head>
 <body>
-    <div class="box">
-        <h2>Smart Complaint Classifier</h2>
-        <input type="text" id="keyword" placeholder="Type complaint..." oninput="classify()">
-        <div id="result"></div>
+<div class="wrap">
+  <div class="card" role="application" aria-label="Smart Complaint Classifier">
+    <!-- LEFT -->
+    <div class="left">
+      <h1>Smart Complaint Classifier</h1>
+      <p class="lead">Type a customer complaint (short sentence or keywords). Press <strong>Enter</strong> or click <em>Check</em>.</p>
+
+      <div class="input-row" style="margin-bottom:8px;">
+        <div class="input" style="position:relative;">
+          <input id="keyword" type="text" placeholder="e.g. 'left earbud muffled & bluetooth disconnects'" aria-label="Complaint input" autocomplete="off" />
+          <!-- small search/enter icon -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="pointer-events:none;">
+            <path d="M21 21l-4.35-4.35" stroke="rgba(255,255,255,0.7)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" stroke="rgba(255,255,255,0.7)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <button id="checkBtn" class="btn small" title="Classify">Check</button>
+        <button id="clearBtn" class="btn secondary small" title="Clear">Clear</button>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="copyBtn" class="btn secondary small" title="Copy last result">Copy Result</button>
+        <button id="exampleBtn" class="btn secondary small" title="Insert example">Try example</button>
+      </div>
+
+      <div class="meta">Local & offline — no network required. Smart matching (multi-match + suggestions).</div>
     </div>
 
-    <script>
-        async function classify() {
-            let keyword = document.getElementById("keyword").value;
-            if (!keyword.trim()) {
-                document.getElementById("result").innerHTML = "";
-                return;
-            }
-            let res = await fetch(`/api/complaint_api/classify?keyword=${encodeURIComponent(keyword)}`);
-            let data = await res.json();
+    <!-- RIGHT -->
+    <div class="right">
+      <div class="panel-title">
+        <div class="dot" aria-hidden="true"></div>
+        <div>
+          <div style="font-weight:700;">Classification Results</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">Matches found will appear as chips. Suggestions appear when no direct match.</div>
+        </div>
+      </div>
 
-            let html = "";
-            if (data.complaint_types) {
-                html += "<p>Complaint Type(s):</p>";
-                data.complaint_types.forEach(type => {
-                    html += `<span class="match">${type}</span>`;
-                });
-            }
-            if (data.suggestions && data.suggestions.length > 0) {
-                html += `<p class="suggestion">Did you mean: ${data.suggestions.join(", ")}?</p>`;
-            }
-            document.getElementById("result").innerHTML = html;
-        }
-    </script>
+      <div class="results" id="results" aria-live="polite">
+        <div class="chips" id="chips"></div>
+        <div id="suggestion" class="suggest"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Complaint map (from your file) ---------- */
+const complaint_map = {
+  /* AUDIO / VIDEO ISSUES */
+  "muffled": "Audio / Video Issue",
+  "sound not clear": "Audio / Video Issue",
+  "unclear sound": "Audio / Video Issue",
+  "echo": "Audio / Video Issue",
+  "noise cancellation": "Audio / Video Issue",
+  "no audio": "Audio / Video Issue",
+  "distorted sound": "Audio / Video Issue",
+  "audio delay": "Audio / Video Issue",
+  "video lag": "Audio / Video Issue",
+  "screen flickering": "Audio / Video Issue",
+  "dead pixels": "Audio / Video Issue",
+  /* BLUETOOTH ISSUES */
+  "bluetooth not connecting": "Bluetooth Issue",
+  "pairing failure": "Bluetooth Issue",
+  "short range": "Bluetooth Issue",
+  "frequent disconnection": "Bluetooth Issue",
+  "unstable connection": "Bluetooth Issue",
+  "bluetooth not detected": "Bluetooth Issue",
+  "interference": "Bluetooth Issue",
+  /* DAMAGED ITEM */
+  "dents": "Damaged Item Issue",
+  "scratches": "Damaged Item Issue",
+  "broken": "Damaged Item Issue",
+  "cracked": "Damaged Item Issue",
+  "seal broken": "Packaging Issue",
+  "outer packaging damaged": "Damaged Item Issue",
+  "used product": "Damaged Item Issue",
+  "water damage": "Damaged Item Issue",
+  "swollen battery": "Damaged Item Issue",
+  /* MISSING ITEM */
+  "item missing": "Missing Item Issue",
+  "completely missing": "Missing Item Issue",
+  "empty box": "Parts Missing",
+  "warranty card missing": "Parts Missing",
+  "charging cable missing": "Parts Missing",
+  "manual missing": "Parts Missing",
+  "accessory missing": "Parts Missing",
+  "earbud missing": "Parts Missing",
+  /* FAULTY ITEM */
+  "not charging": "Faulty Item Issue",
+  "poor battery life": "Faulty Item Issue",
+  "device not turning on": "Faulty Item Issue",
+  "not working": "Faulty Item Issue",
+  "overheating": "Faulty Item Issue",
+  "file transfer error": "Faulty Item Issue",
+  "slow charging": "Faulty Item Issue",
+  "inaccurate reading": "Faulty Item Issue",
+  /* WRONG / INCORRECT ITEM */
+  "wrong color": "Wrong / Incorrect Item Issue",
+  "wrong model": "Wrong / Incorrect Item Issue",
+  "wrong size": "Wrong / Incorrect Item Issue",
+  "wrong capacity": "Wrong / Incorrect Item Issue",
+  "different brand": "Wrong / Incorrect Item Issue",
+  "missing features": "Wrong / Incorrect Item Issue",
+  /* ORDERED BY MISTAKE */
+  "ordered by mistake": "Ordered by Mistake",
+  "wanted different brand": "Ordered by Mistake",
+  "wrong specs ordered": "Ordered by Mistake",
+  "wanted different model": "Ordered by Mistake",
+  "wrong variant": "Ordered by Mistake",
+  /* PACKAGING ISSUES */
+  "box damaged": "Packaging Issue",
+  "poor packaging": "Packaging Issue",
+  "security seal missing": "Packaging Issue",
+  "opened packaging": "Packaging Issue",
+  "torn box": "Packaging Issue",
+  /* SIZE EXPECTATION MISMATCH */
+  "too bulky": "Size - Expectation Mismatch",
+  "too small": "Size - Expectation Mismatch",
+  "cable too short": "Size - Expectation Mismatch",
+  "cable too long": "Size - Expectation Mismatch",
+  "strap too tight": "Size - Expectation Mismatch",
+  "strap too loose": "Size - Expectation Mismatch",
+  /* QUALITY EXPECTATION MISMATCH */
+  "cheap quality": "Quality - Expectation Mismatch",
+  "poor finish": "Quality - Expectation Mismatch",
+  "looks duplicate": "Quality - Expectation Mismatch",
+  "poor sound quality": "Quality - Expectation Mismatch",
+  "poor video quality": "Quality - Expectation Mismatch",
+  /* DESIGN EXPECTATION MISMATCH */
+  "design different": "Design - Expectation Mismatch",
+  "buttons too stiff": "Design - Expectation Mismatch",
+  /* COLOUR EXPECTATION MISMATCH */
+  "colour different": "Colour - Expectation Mismatch",
+  "color different": "Colour - Expectation Mismatch",
+  "led color mismatch": "Colour - Expectation Mismatch",
+  /* OTHER EXPECTATION MISMATCH */
+  "logo missing": "Other - Expectation Mismatch",
+  "compatibility issue": "Other - Expectation Mismatch",
+  "unsupported feature": "Other - Expectation Mismatch",
+  /* POTENTIAL FRAUD CANCELED ORDER */
+  "fraud cancellation": "Potential Fraud Canceled Order",
+  "tech_potential_fraud_cancellation": "Potential Fraud Canceled Order",
+  "potential fraud": "Potential Fraud Canceled Order"
+};
+
+/* ---------- Utility: simple fuzzy suggestions (Levenshtein distance) ---------- */
+function levenshtein(a,b){
+  if(!a) return b.length;
+  if(!b) return a.length;
+  const matrix = Array.from({length: b.length+1}, (_,i)=> new Array(a.length+1));
+  for(let i=0;i<=b.length;i++) matrix[i][0]=i;
+  for(let j=0;j<=a.length;j++) matrix[0][j]=j;
+  for(let i=1;i<=b.length;i++){
+    for(let j=1;j<=a.length;j++){
+      const cost = b[i-1]===a[j-1]?0:1;
+      matrix[i][j]= Math.min(
+        matrix[i-1][j]+1,
+        matrix[i][j-1]+1,
+        matrix[i-1][j-1]+cost
+      );
+    }
+  }
+  return matrix[b.length][a.length];
+}
+function suggest(word, keys, n=3){
+  const scored = keys.map(k => ({k, d: levenshtein(word, k)}));
+  scored.sort((a,b)=> a.d - b.d);
+  return scored.slice(0,n).map(x=>x.k);
+}
+
+/* ---------- DOM ---------- */
+const input = document.getElementById('keyword');
+const chips = document.getElementById('chips');
+const suggestionEl = document.getElementById('suggestion');
+const checkBtn = document.getElementById('checkBtn');
+const clearBtn = document.getElementById('clearBtn');
+const copyBtn = document.getElementById('copyBtn');
+const exampleBtn = document.getElementById('exampleBtn');
+
+let lastResultText = '';
+
+/* classify function: finds all categories that match any key present in text */
+function classifyText(text){
+  const t = text.toLowerCase();
+  const found = new Set();
+  for(const [k,v] of Object.entries(complaint_map)){
+    if(t.includes(k)) found.add(v);
+  }
+  if(found.size) return {types: Array.from(found), suggestions: []};
+  // if nothing found, try to suggest nearest keywords
+  const keys = Object.keys(complaint_map);
+  const s = suggest(t, keys, 4);
+  return {types: ["Others - Miscellaneous"], suggestions: s};
+}
+
+/* render results */
+function renderResult(obj){
+  chips.innerHTML = '';
+  suggestionEl.innerHTML = '';
+  if(obj.types && obj.types.length){
+    obj.types.forEach(type=>{
+      const el = document.createElement('span');
+      el.className = 'chip';
+      // style special classes
+      if(type.includes('Missing') || type.includes('Parts')) el.classList.add('kv');
+      if(type.includes('Faulty') || type.includes('Damaged')) el.classList.add('warn');
+      if(type.includes('Issue') && !type.includes('Faulty')) el.classList.add('good');
+      el.textContent = type;
+      chips.appendChild(el);
+    });
+  }
+  if(obj.suggestions && obj.suggestions.length){
+    suggestionEl.innerHTML = 'Suggestions: ' + obj.suggestions.map(s=>`"${s}"`).join(', ');
+  }
+
+  // store last
+  lastResultText = (obj.types||[]).join(', ');
+}
+
+/* UI actions */
+async function doClassify(){
+  const text = input.value.trim();
+  if(!text) {
+    renderResult({types:[], suggestions:[]});
+    return;
+  }
+  // local classification (instantly)
+  const res = classifyText(text);
+  renderResult(res);
+}
+
+/* listeners */
+input.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') {
+    e.preventDefault();
+    doClassify();
+  }
+});
+input.addEventListener('input', ()=>{
+  // live, but debounce slightly
+  if(window._debounceTimer) clearTimeout(window._debounceTimer);
+  window._debounceTimer = setTimeout(doClassify, 220);
+});
+
+checkBtn.addEventListener('click', doClassify);
+clearBtn.addEventListener('click', ()=>{
+  input.value = '';
+  renderResult({types:[], suggestions:[]});
+  input.focus();
+});
+copyBtn.addEventListener('click', ()=>{
+  if(!lastResultText) {
+    navigator.clipboard.writeText('No result to copy.').then(()=>{},()=>{});
+    return;
+  }
+  navigator.clipboard.writeText(lastResultText).then(()=> {
+    copyBtn.textContent = 'Copied ✓';
+    setTimeout(()=> copyBtn.textContent='Copy Result', 1400);
+  }, ()=>{
+    copyBtn.textContent = 'Failed';
+    setTimeout(()=> copyBtn.textContent='Copy Result', 1400);
+  });
+});
+exampleBtn.addEventListener('click', ()=>{
+  input.value = "Left earbud muffled and bluetooth keeps disconnecting frequently";
+  doClassify();
+});
+
+/* initial demo */
+input.value = "";
+renderResult({types:[], suggestions:[]});
+</script>
 </body>
 </html>
